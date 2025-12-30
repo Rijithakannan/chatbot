@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integrated Chatbot</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f4f7f6; }
+        .chat-container { width: 100%; max-width: 450px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; }
+        #chat-box { flex-grow: 1; padding: 15px; overflow-y: auto; max-height: 400px; border-bottom: 1px solid #eee; }
+        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 15px; max-width: 80%; }
+        .user { background-color: #007bff; color: white; margin-left: auto; text-align: right; }
+        .bot { background-color: #e2e8f0; color: #333; margin-right: auto; }
+        #input-form { display: flex; padding: 10px; }
+        #user-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; margin-right: 10px; }
+        #send-button { padding: 10px 15px; background-color: #6c9c84; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div id="chat-box">
+            <div class="message bot">Hello! Ask me about the weather in London or Tokyo!</div>
+        </div>
+
+        <form id="input-form">
+            <input type="text" id="user-input" placeholder="Type your message..." required>
+            <button type="submit" id="send-button">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const inputForm = document.getElementById('input-form');
+        const userInput = document.getElementById('user-input');
+
+        // Function to display a message in the chat box
+        function displayMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+        }
+
+        // Function to send message to the Python API
+        async function sendMessage(message) {
+            // Display user message immediately
+            displayMessage(message, 'user');
+            
+            try {
+                // The crucial API call using fetch
+                const response = await fetch('http://127.0.0.1:5000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // Send the message as JSON
+                    body: JSON.stringify({ message: message }),
+                });
+
+                const data = await response.json();
+                
+                // Display bot response
+                displayMessage(data.response, 'bot');
+
+            } catch (error) {
+                console.error('Error connecting to the chatbot API:', error);
+                displayMessage("Error: Could not connect to the server (API). Make sure app.py is running.", 'bot');
+            }
+        }
+
+        // Handle form submission
+        inputForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent page refresh
+            const message = userInput.value.trim();
+
+            if (message) {
+                sendMessage(message);
+                userInput.value = ''; // Clear input field
+            }
+        });
+    </script>
+
+</body>
+</html>
